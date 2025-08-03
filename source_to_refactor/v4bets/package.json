@@ -1,0 +1,68 @@
+{
+  "name": "v4bets-data-crawler",
+  "version": "1.0.0",
+  "description": "重構的單工數據抓取系統，支持PostgreSQL存儲",
+  "main": "manager.js",
+  "scripts": {
+    "start:manager": "node manager.js",
+    "start:worker": "node worker.js",
+    "start:trunk": "node trunk-server.js",
+    "start:realtime": "node start-realtime-listener.js",
+    "start:api": "node start-api-server.js",
+    "start:integrated": "node start-integrated-server.js",
+    "start:data": "node start-data-services.js",
+    "start:direct": "node start-direct-push.js",
+    "start": "npm run start:data",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose",
+    "test:unit": "jest --testPathPattern=__tests__/unit",
+    "test:integration": "jest --testPathPattern=__tests__/integration"
+  },
+  "dependencies": {
+    "ethers": "^6.15.0",
+    "express": "^4.18.2",
+    "moment-timezone": "^0.5.43",
+    "pg": "^8.14.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.8",
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0",
+    "supertest": "^6.3.3"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "*.js",
+      "!node_modules/**",
+      "!coverage/**",
+      "!jest.config.js",
+      "!test-*.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.js",
+      "**/?(*.)+(spec|test).js"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ]
+  },
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "data-crawler",
+    "postgresql",
+    "testing"
+  ],
+  "author": "V4Bets Team",
+  "license": "MIT"
+}

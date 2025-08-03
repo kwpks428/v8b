@@ -1,0 +1,33 @@
+{
+  "name": "v8b-refactored",
+  "version": "1.0.0",
+  "description": "Refactored full-stack application for PancakeSwap Prediction.",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "migrate": "node scripts/migrate.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ethers": "^6.15.0",
+    "express": "^4.19.2",
+    "pg": "^8.11.3",
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "keywords": [
+    "blockchain",
+    "pancakeswap",
+    "prediction",
+    "fullstack",
+    "refactored"
+  ],
+  "author": "",
+  "license": "ISC"
+}
