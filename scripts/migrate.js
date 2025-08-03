@@ -1,5 +1,8 @@
 const fs = require('fs');
 const path = require('path');
+const dotenv = require('dotenv');
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 const ConnectionManager = require('../server/db/ConnectionManager');
 
 async function migrate() {
