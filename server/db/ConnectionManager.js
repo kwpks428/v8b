@@ -1,5 +1,5 @@
 const { ethers } = require('ethers');
-const { Client, Pool } = require('pg');
+const { Pool } = require('pg');
 const TimeService = require('../services/TimeService');
 const dotenv = require('dotenv');
 

@@ -5,7 +5,9 @@ const ConnectionManager = require('./db/ConnectionManager');
 const HistoricalCrawler = require('./workers/historical-crawler');
 const RealtimeListener = require('./workers/realtime-listener');
 
-dotenv.config();
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config();
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
