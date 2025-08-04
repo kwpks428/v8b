@@ -24,12 +24,6 @@ async function startServer() {
         const realtimeListener = new RealtimeListener();
 
         await historicalCrawler.initialize();
-        await realtimeListener.initialize();
-
-        // Start background workers
-        historicalCrawler.start();
-        // Realtime listener is already started by its initialize method
-
         // API endpoint for status
         app.get('/api/status', (req, res) => {
             res.json({
@@ -45,6 +39,11 @@ async function startServer() {
         });
 
         realtimeListener.setServer(server);
+        await realtimeListener.initialize();
+
+        // Start background workers
+        historicalCrawler.start();
+        // Realtime listener is already started by its initialize method
 
     } catch (error) {
         console.error('❌ Failed to start application:', error);
