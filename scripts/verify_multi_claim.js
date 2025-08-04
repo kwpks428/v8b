@@ -6,50 +6,64 @@ const ConnectionManager = require('../server/db/ConnectionManager');
 async function verifyMultiClaim() {
     console.log('🚀 Starting multi-claim data verification...');
 
-    const targetWallet = '0xaa18ac9e18e1517a11e2e9444a7f353a5d4e28b9';
-    const targetClaimEpoch = 401002;
-    const expectedRoundsClaimed = 15;
+    const verificationTargets = [
+        {
+            wallet: '0x2a2d9330f57b07a0bc4e4dd843d99cc92503bdbf',
+            claimEpoch: 401083,
+            expectedRoundsClaimed: 12
+        },
+        {
+            wallet: '0xf5fe264ca2a7f0993cbf98949f85e35b706ec206',
+            claimEpoch: 401066,
+            expectedRoundsClaimed: 39
+        }
+    ];
 
     try {
         await ConnectionManager.initializeDatabasePool();
 
-        // 1. Query multi_round_claimer table
-        console.log(`🔍 Querying multi_round_claimer for wallet ${targetWallet} in epoch ${targetClaimEpoch}...`);
-        const multiClaimResult = await ConnectionManager.executeQuery(
-            'SELECT rounds_claimed FROM multi_round_claimer WHERE wallet_address = $1 AND claim_epoch = $2',
-            [targetWallet.toLowerCase(), targetClaimEpoch]
-        );
+        for (const target of verificationTargets) {
+            const { wallet, claimEpoch, expectedRoundsClaimed } = target;
+            console.log(`\n--- Verifying Wallet: ${wallet}, Claim Epoch: ${claimEpoch} ---`);
 
-        if (multiClaimResult.rows.length === 0) {
-            console.log(`❌ No record found in multi_round_claimer for ${targetWallet} in epoch ${targetClaimEpoch}.`);
-            return;
-        }
+            // 1. Query multi_round_claimer table
+            console.log(`🔍 Querying multi_round_claimer for wallet ${wallet} in epoch ${claimEpoch}...`);
+            const multiClaimResult = await ConnectionManager.executeQuery(
+                'SELECT rounds_claimed FROM multi_round_claimer WHERE wallet_address = $1 AND claim_epoch = $2',
+                [wallet.toLowerCase(), claimEpoch]
+            );
 
-        const recordedRoundsClaimed = multiClaimResult.rows[0].rounds_claimed;
-        console.log(`📊 Recorded rounds_claimed in multi_round_claimer: ${recordedRoundsClaimed}`);
+            if (multiClaimResult.rows.length === 0) {
+                console.log(`❌ No record found in multi_round_claimer for ${wallet} in epoch ${claimEpoch}.`);
+                continue; // Move to next target
+            }
 
-        // 2. Query claim table for actual distinct bet_epochs
-        console.log(`🔍 Querying claim table for distinct bet_epochs for wallet ${targetWallet} in epoch ${targetClaimEpoch}...`);
-        const actualBetEpochsResult = await ConnectionManager.executeQuery(
-            'SELECT COUNT(DISTINCT bet_epoch) AS actual_distinct_bet_epochs FROM claim WHERE wallet_address = $1 AND epoch = $2',
-            [targetWallet.toLowerCase(), targetClaimEpoch]
-        );
+            const recordedRoundsClaimed = multiClaimResult.rows[0].rounds_claimed;
+            console.log(`📊 Recorded rounds_claimed in multi_round_claimer: ${recordedRoundsClaimed}`);
 
-        const actualDistinctBetEpochs = actualBetEpochsResult.rows[0].actual_distinct_bet_epochs;
-        console.log(`📊 Actual distinct bet_epochs in claim table: ${actualDistinctBetEpochs}`);
+            // 2. Query claim table for actual distinct bet_epochs
+            console.log(`🔍 Querying claim table for distinct bet_epochs for wallet ${wallet} in epoch ${claimEpoch}...`);
+            const actualBetEpochsResult = await ConnectionManager.executeQuery(
+                'SELECT COUNT(DISTINCT bet_epoch) AS actual_distinct_bet_epochs FROM claim WHERE wallet_address = $1 AND epoch = $2',
+                [wallet.toLowerCase(), claimEpoch]
+            );
 
-        // 3. Compare and verify
-        console.log('--- Verification Result ---');
-        if (recordedRoundsClaimed === actualDistinctBetEpochs) {
-            console.log(`✅ VERIFICATION SUCCESS: Recorded rounds_claimed (${recordedRoundsClaimed}) matches actual distinct bet_epochs (${actualDistinctBetEpochs}).`);
-        } else {
-            console.log(`❌ VERIFICATION FAILED: Recorded rounds_claimed (${recordedRoundsClaimed}) DOES NOT match actual distinct bet_epochs (${actualDistinctBetEpochs}).`);
-        }
-        console.log(`Expected rounds_claimed: ${expectedRoundsClaimed}`);
-        if (recordedRoundsClaimed === expectedRoundsClaimed) {
-            console.log(`✅ Recorded rounds_claimed matches expected value (${expectedRoundsClaimed}).`);
-        } else {
-            console.log(`❌ Recorded rounds_claimed DOES NOT match expected value (${expectedRoundsClaimed}).`);
+            const actualDistinctBetEpochs = actualBetEpochsResult.rows[0].actual_distinct_bet_epochs;
+            console.log(`📊 Actual distinct bet_epochs in claim table: ${actualDistinctBetEpochs}`);
+
+            // 3. Compare and verify
+            console.log('--- Verification Result ---');
+            if (recordedRoundsClaimed === actualDistinctBetEpochs) {
+                console.log(`✅ VERIFICATION SUCCESS: Recorded rounds_claimed (${recordedRoundsClaimed}) matches actual distinct bet_epochs (${actualDistinctBetEpochs}).`);
+            } else {
+                console.log(`❌ VERIFICATION FAILED: Recorded rounds_claimed (${recordedRoundsClaimed}) DOES NOT match actual distinct bet_epochs (${actualDistinctBetEpochs}).`);
+            }
+            console.log(`Expected rounds_claimed: ${expectedRoundsClaimed}`);
+            if (recordedRoundsClaimed === expectedRoundsClaimed) {
+                console.log(`✅ Recorded rounds_claimed matches expected value (${expectedRoundsClaimed}).`);
+            } else {
+                console.log(`❌ Recorded rounds_claimed DOES NOT match expected value (${expectedRoundsClaimed}).`);
+            }
         }
 
     } catch (error) {
