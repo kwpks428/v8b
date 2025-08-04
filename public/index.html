@@ -262,7 +262,7 @@
                             this.updateDisplay();
                             this.stopCountdown(); // Stop any existing countdown
                         } else if (message.type === 'round_lock') {
-                            this.lockTime = Date.now() + 10000; // Assuming 10 seconds lock time for now
+                            this.lockTime = message.lockTime; // Use lockTime from backend
                             this.startCountdown();
                         }
                     } catch (error) {

@@ -110,9 +110,18 @@ class RealtimeListener {
             this.broadcastToClients({ type: 'round_start', epoch: epoch.toString() });
         });
 
-        this.contract.on('LockRound', (epoch) => {
+        this.contract.on('LockRound', async (epoch) => {
             console.log(`🔒 Round locked: ${epoch}`);
-            this.broadcastToClients({ type: 'round_lock', epoch: epoch.toString() });
+            // Assuming contract has a method to get lock time for the epoch
+            let lockTime = Date.now() + 30000; // Default to 30 seconds if not available
+            try {
+                // Replace with actual contract call if available
+                // const contractLockTime = await this.contract.getLockTime(epoch);
+                // lockTime = contractLockTime.toNumber() * 1000; // Convert to milliseconds
+            } catch (error) {
+                console.error('Error getting lock time from contract:', error);
+            }
+            this.broadcastToClients({ type: 'round_lock', epoch: epoch.toString(), lockTime: lockTime });
         });
     }
 
