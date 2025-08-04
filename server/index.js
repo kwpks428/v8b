@@ -39,10 +39,12 @@ async function startServer() {
             });
         });
 
-        app.listen(PORT, '0.0.0.0', () => {
+        const server = app.listen(PORT, '0.0.0.0', () => {
             console.log(`✅ Web server is running on port ${PORT}`)
             console.log('✨ Application started successfully!');
         });
+
+        realtimeListener.setServer(server);
 
     } catch (error) {
         console.error('❌ Failed to start application:', error);

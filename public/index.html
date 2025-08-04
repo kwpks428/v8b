@@ -242,7 +242,7 @@
             }
 
             connectWebSocket() {
-                const wsUrl = `ws://${window.location.host.split(':')[0]}:3010/ws`;
+                const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host.split(':')[0]}/ws`;
                 this.ws = new WebSocket(wsUrl);
 
                 this.ws.onopen = () => this.updateConnectionStatus(true);

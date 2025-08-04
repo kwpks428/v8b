@@ -35,13 +35,17 @@ class SuspiciousWalletMonitor {
 }
 
 class RealtimeListener {
-    constructor(port = 3010) {
+    constructor() {
         this.connectionManager = ConnectionManager;
         this.suspiciousMonitor = new SuspiciousWalletMonitor();
         this.processedBets = new Map();
-        this.wsPort = port;
         this.wss = null;
         this.connectedClients = new Set();
+        this.server = null;
+    }
+
+    setServer(server) {
+        this.server = server;
     }
 
     async initialize() {
@@ -60,8 +64,11 @@ class RealtimeListener {
     }
 
     initializeWebSocketServer() {
-        const server = http.createServer();
-        this.wss = new WebSocket.Server({ server, path: '/ws' });
+        if (!this.server) {
+            console.error('❌ HTTP server instance not provided to RealtimeListener.');
+            return;
+        }
+        this.wss = new WebSocket.Server({ server: this.server, path: '/ws' });
 
         this.wss.on('connection', (ws) => {
             console.log('🔗 New frontend client connected.');
@@ -76,9 +83,7 @@ class RealtimeListener {
             });
         });
 
-        server.listen(this.wsPort, '0.0.0.0', () => {
-            console.log(`🚀 WebSocket server listening on port ${this.wsPort}`);
-        });
+        
     }
 
     broadcastToClients(message) {
