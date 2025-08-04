@@ -99,7 +99,7 @@ class ConnectionManager {
     async initializeHttpProvider() {
         try {
             console.log('🌐 [ConnectionManager] Initializing HTTP RPC Provider...');
-            this.connections.httpProvider = new ethers.JsonRpcProvider(this.rpcConfig.httpUrl, 'bsc', { timeout: this.rpcConfig.timeout, retryLimit: this.rpcConfig.retryAttempts });
+            this.connections.httpProvider = new ethers.JsonRpcProvider(this.rpcConfig.httpUrl, 56, { timeout: this.rpcConfig.timeout, retryLimit: this.rpcConfig.retryAttempts });
             const network = await this.connections.httpProvider.getNetwork();
             const blockNumber = await this.connections.httpProvider.getBlockNumber();
             this.status.httpConnected = true;
