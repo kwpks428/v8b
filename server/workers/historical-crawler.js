@@ -312,10 +312,24 @@ class HistoricalCrawler {
         });
 
         claimData.forEach(claim => {
-            queries.push({
-                sql: `INSERT INTO claim (epoch, claim_ts, wallet_address, claim_amount, bet_epoch, tx_hash) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (tx_hash) DO NOTHING`,
-                params: [claim.epoch, claim.claim_ts, claim.wallet_address, claim.claim_amount, claim.bet_epoch, claim.tx_hash]
-            });
+            const claimQuery = `
+                    INSERT INTO claim (
+                        epoch, claim_ts, wallet_address, claim_amount, bet_epoch, tx_hash, block_number
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                    ON CONFLICT (tx_hash, bet_epoch, wallet_address) DO NOTHING
+                `;
+                
+                for (const claim of claimData) {
+                    await client.query(claimQuery, [
+                        claim.epoch.toString(),
+                        claim.claim_ts,
+                        claim.wallet_address,
+                        claim.claim_amount,
+                        claim.bet_epoch.toString(),
+                        claim.tx_hash,
+                        claim.block_number // Add block_number
+                    ]);
+                }
         });
 
         try {

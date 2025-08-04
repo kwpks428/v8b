@@ -144,11 +144,14 @@ CREATE TABLE claim (
     bet_epoch BIGINT,               -- 原下注局次（可能與epoch不同）
     
     -- 區塊鏈信息
-    tx_hash VARCHAR(66) UNIQUE,     -- 交易哈希（防重複關鍵）
+    tx_hash VARCHAR(66),            -- 交易哈希
     block_number BIGINT,            -- 區塊號
     
     -- 審計欄位
-    created_ts TIMESTAMP DEFAULT NOW()
+    created_ts TIMESTAMP DEFAULT NOW(),
+
+    -- 新的複合唯一性約束
+    CONSTRAINT unique_claim_tx_bet_wallet UNIQUE (tx_hash, bet_epoch, wallet_address)
 );
 
 -- claim表索引優化
