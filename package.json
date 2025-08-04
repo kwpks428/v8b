@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
-    "migrate": "node scripts/migrate.js"
+    "migrate": "node scripts/migrate.js",
+    "start:frontend": "node frontend-server.js"
   },
   "engines": {
     "node": ">=18.0.0"

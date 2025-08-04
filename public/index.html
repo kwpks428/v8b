@@ -220,146 +220,128 @@
     <div class="connection-status disconnected" id="connectionStatus">已斷線</div>
 
     <script>
-        class RealtimeMonitor {
-            constructor() {
-                this.ws = null;
-                this.currentRound = null;
-                this.lockTime = null;
-                this.countdownInterval = null;
-                this.stats = { upTotal: 0, downTotal: 0, upCount: 0, downCount: 0, totalAmount: 0, totalCount: 0 };
-                this.bets = [];
-                this.init();
-            }
+        <script>
+        let currentRound = null;
+        let lockTime = null;
+        let countdownInterval = null;
+        let stats = { upTotal: 0, downTotal: 0, upCount: 0, downCount: 0, totalAmount: 0, totalCount: 0 };
+        let bets = [];
 
-            init() {
-                this.connectWebSocket();
-                this.updateConnectionStatus(false);
-                setInterval(() => {
-                    if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
-                        this.connectWebSocket();
-                    }
-                }, 5000);
-            }
-
-            connectWebSocket() {
-                const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host.split(':')[0]}/ws`;
-                this.ws = new WebSocket(wsUrl);
-
-                this.ws.onopen = () => this.updateConnectionStatus(true);
-                this.ws.onclose = () => this.updateConnectionStatus(false);
-                this.ws.onerror = () => this.updateConnectionStatus(false);
-
-                this.ws.onmessage = (event) => {
-                    try {
-                        const message = JSON.parse(event.data);
-                        if (message.channel === 'new_bet_data') {
-                            this.handleNewBet(message.data);
-                        } else if (message.type === 'round_start') {
-                            this.currentRound = message.epoch;
-                            document.getElementById('currentRound').textContent = this.currentRound;
-                            this.bets = [];
-                            this.resetStats();
-                            this.updateDisplay();
-                            this.stopCountdown(); // Stop any existing countdown
-                        } else if (message.type === 'round_lock') {
-                            this.lockTime = message.lockTime; // Use lockTime from backend
-                            this.startCountdown();
-                        }
-                    } catch (error) {
-                        console.error('Error processing message:', error);
-                    }
-                };
-            }
-
-            handleNewBet(bet) {
-                if (this.currentRound && bet.epoch !== this.currentRound) {
-                    this.currentRound = bet.epoch;
-                    this.bets = [];
-                    this.resetStats();
-                    document.getElementById('currentRound').textContent = this.currentRound;
-                }
-                if (!this.currentRound) {
-                    this.currentRound = bet.epoch;
-                    document.getElementById('currentRound').textContent = this.currentRound;
-                }
-
-                this.bets.unshift(bet);
-                if (this.bets.length > 100) {
-                    this.bets.pop();
-                }
-                this.updateStats(bet);
-                this.updateDisplay();
-            }
-
-            updateStats(bet) {
-                this.stats.totalAmount += parseFloat(bet.amount);
-                this.stats.totalCount++;
-                if (bet.direction === 'UP') {
-                    this.stats.upTotal += parseFloat(bet.amount);
-                    this.stats.upCount++;
-                } else {
-                    this.stats.downTotal += parseFloat(bet.amount);
-                    this.stats.downCount++;
-                }
-
-                const upPayout = this.stats.upTotal > 0 ? (this.stats.totalAmount * 0.97 / this.stats.upTotal).toFixed(2) : 0;
-                const downPayout = this.stats.downTotal > 0 ? (this.stats.totalAmount * 0.97 / this.stats.downTotal).toFixed(2) : 0;
-
-                document.getElementById('totalUp').textContent = `${this.stats.upTotal.toFixed(4)} (${upPayout}x)`;
-                document.getElementById('totalDown').textContent = `${this.stats.downTotal.toFixed(4)} (${downPayout}x)`;
-                document.getElementById('totalBets').textContent = `${this.stats.totalAmount.toFixed(4)} BNB (${this.stats.totalCount})`;
-            }
-
-            updateDisplay() {
-                const betsContent = document.getElementById('betsContent');
-                betsContent.innerHTML = this.bets.map(bet => this.createBetItemHTML(bet)).join('');
-            }
-
-            createBetItemHTML(bet) {
-                const time = new Date(bet.bet_ts).toLocaleTimeString('en-GB');
-                const directionClass = bet.bet_direction.toLowerCase();
-                return `
-                    <div class="bet-item">
-                        <div class="bet-time">${time}</div>
-                        <div class="bet-epoch">${bet.epoch}</div>
-                        <div class="bet-wallet">${bet.wallet_address}</div>
-                        <div class="bet-direction ${directionClass}">${bet.bet_direction}</div>
-                        <div class="bet-amount">${parseFloat(bet.amount).toFixed(4)}</div>
-                    </div>
-                `;
-            }
-
-            resetStats() {
-                this.stats = { upTotal: 0, downTotal: 0, upCount: 0, downCount: 0, totalAmount: 0, totalCount: 0 };
-            }
-
-            updateConnectionStatus(connected) {
-                const statusEl = document.getElementById('connectionStatus');
-                statusEl.className = `connection-status ${connected ? 'connected' : 'disconnected'}`;
-                statusEl.textContent = connected ? '已連線' : '已斷線';
-            }
-
-            startCountdown() {
-                this.stopCountdown(); // Clear any existing interval
-                this.countdownInterval = setInterval(() => {
-                    const timeLeft = Math.max(0, Math.floor((this.lockTime - Date.now()) / 1000));
-                    document.getElementById('lockCountdown').textContent = `${timeLeft}s`;
-                    if (timeLeft === 0) {
-                        this.stopCountdown();
-                    }
-                }, 1000);
-            }
-
-            stopCountdown() {
-                if (this.countdownInterval) {
-                    clearInterval(this.countdownInterval);
-                    this.countdownInterval = null;
-                    document.getElementById('lockCountdown').textContent = '--'; // Reset display
-                }
+        async function fetchRoundInfo() {
+            try {
+                const response = await fetch('/api/round-info');
+                const data = await response.json();
+                updateRoundInfo(data);
+            } catch (error) {
+                console.error('Error fetching round info:', error);
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => new RealtimeMonitor());
+        async function fetchLatestBets() {
+            try {
+                const response = await fetch('/api/latest-bets');
+                const data = await response.json();
+                updateBetsDisplay(data);
+            } catch (error) {
+                console.error('Error fetching latest bets:', error);
+            }
+        }
+
+        function updateRoundInfo(data) {
+            if (currentRound !== data.epoch) {
+                currentRound = data.epoch;
+                document.getElementById('currentRound').textContent = currentRound;
+                bets = [];
+                resetStats();
+                updateBetsDisplay([]); // Clear bets display for new round
+            }
+            lockTime = data.lockTime;
+            startCountdown();
+        }
+
+        function updateBetsDisplay(newBets) {
+            // Analyze newBets to update stats
+            // This part needs to be carefully implemented to avoid re-calculating everything
+            // For simplicity, let's re-calculate for now, but optimize later if needed
+            resetStats();
+            newBets.forEach(bet => {
+                stats.totalAmount += parseFloat(bet.amount);
+                stats.totalCount++;
+                if (bet.bet_direction === 'UP') {
+                    stats.upTotal += parseFloat(bet.amount);
+                    stats.upCount++;
+                } else {
+                    stats.downTotal += parseFloat(bet.amount);
+                    stats.downCount++;
+                }
+            });
+
+            const upPayout = stats.upTotal > 0 ? (stats.totalAmount * 0.97 / stats.upTotal).toFixed(2) : 0;
+            const downPayout = stats.downTotal > 0 ? (stats.totalAmount * 0.97 / stats.downTotal).toFixed(2) : 0;
+
+            document.getElementById('totalUp').textContent = `${stats.upTotal.toFixed(4)} (${upPayout}x)`;
+            document.getElementById('totalDown').textContent = `${stats.downTotal.toFixed(4)} (${downPayout}x)`;
+            document.getElementById('totalBets').textContent = `${stats.totalAmount.toFixed(4)} BNB (${stats.totalCount})`;
+
+            const betsContent = document.getElementById('betsContent');
+            betsContent.innerHTML = newBets.map(bet => createBetItemHTML(bet)).join('');
+        }
+
+        function createBetItemHTML(bet) {
+            const time = new Date(bet.bet_ts).toLocaleTimeString('en-GB');
+            const directionClass = bet.bet_direction.toLowerCase();
+            return `
+                <div class="bet-item">
+                    <div class="bet-time">${time}</div>
+                    <div class="bet-epoch">${bet.epoch}</div>
+                    <div class="bet-wallet">${bet.wallet_address}</div>
+                    <div class="bet-direction ${directionClass}">${bet.bet_direction}</div>
+                    <div class="bet-amount">${parseFloat(bet.amount).toFixed(4)}</div>
+                </div>
+            `;
+        }
+
+        function resetStats() {
+            stats = { upTotal: 0, downTotal: 0, upCount: 0, downCount: 0, totalAmount: 0, totalCount: 0 };
+        }
+
+        function startCountdown() {
+            stopCountdown(); // Clear any existing interval
+            countdownInterval = setInterval(() => {
+                const timeLeft = Math.max(0, Math.floor((lockTime - Date.now()) / 1000));
+                document.getElementById('lockCountdown').textContent = `${timeLeft}s`;
+                if (timeLeft === 0) {
+                    stopCountdown();
+                    // Optionally trigger a refresh for new round info
+                    fetchRoundInfo();
+                }
+            }, 1000);
+        }
+
+        function stopCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+                document.getElementById('lockCountdown').textContent = '--'; // Reset display
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.className = `connection-status ${connected ? 'connected' : 'disconnected'}`;
+            statusEl.textContent = connected ? '已連線' : '已斷線';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial fetch
+            fetchRoundInfo();
+            fetchLatestBets();
+            updateConnectionStatus(true); // Assume connected for local server
+
+            // Set up polling intervals
+            setInterval(fetchRoundInfo, 5000); // Fetch round info every 5 seconds
+            setInterval(fetchLatestBets, 2000); // Fetch latest bets every 2 seconds
+        });
     </script>
 </body>
 </html>
