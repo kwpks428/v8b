@@ -6,7 +6,8 @@ const TimeService = require('../services/TimeService');
 
 class SuspiciousWalletMonitor {
     constructor() {
-        this.walletBetCounts = new Map();
+        this.walletBetCounts = new Map(); // Stores total bet count (number)
+        this.recentBets = new Map();      // Stores recent bet timestamps (array)
         this.highFrequencyWindow = 60000;
         this.maxBetsInWindow = 10;
     }
@@ -15,15 +16,18 @@ class SuspiciousWalletMonitor {
         const now = Date.now();
         let flags = [];
 
+        // Correctly handle total bet count
         const currentCount = (this.walletBetCounts.get(wallet) || 0) + 1;
         this.walletBetCounts.set(wallet, currentCount);
 
-        const recentBets = (this.walletBetCounts.get(wallet) || []).filter(time => now - time < this.highFrequencyWindow);
-        recentBets.push(now);
-        this.walletBetCounts.set(wallet, recentBets);
+        // Correctly handle recent bets for high-frequency check
+        const walletRecentBets = this.recentBets.get(wallet) || [];
+        const validRecentBets = walletRecentBets.filter(time => now - time < this.highFrequencyWindow);
+        validRecentBets.push(now);
+        this.recentBets.set(wallet, validRecentBets);
 
-        if (recentBets.length > this.maxBetsInWindow) {
-            flags.push(`High frequency betting: ${recentBets.length} bets in the last minute.`);
+        if (validRecentBets.length > this.maxBetsInWindow) {
+            flags.push(`High frequency betting: ${validRecentBets.length} bets in the last minute.`);
         }
 
         return { isSuspicious: flags.length > 0, flags };
