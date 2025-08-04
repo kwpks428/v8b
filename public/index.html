@@ -254,6 +254,16 @@
                         const message = JSON.parse(event.data);
                         if (message.channel === 'new_bet_data') {
                             this.handleNewBet(message.data);
+                        } else if (message.type === 'round_start') {
+                            this.currentRound = message.epoch;
+                            document.getElementById('currentRound').textContent = this.currentRound;
+                            this.bets = [];
+                            this.resetStats();
+                            this.updateDisplay();
+                            this.stopCountdown(); // Stop any existing countdown
+                        } else if (message.type === 'round_lock') {
+                            this.lockTime = Date.now() + 10000; // Assuming 10 seconds lock time for now
+                            this.startCountdown();
                         }
                     } catch (error) {
                         console.error('Error processing message:', error);
@@ -327,6 +337,25 @@
                 const statusEl = document.getElementById('connectionStatus');
                 statusEl.className = `connection-status ${connected ? 'connected' : 'disconnected'}`;
                 statusEl.textContent = connected ? '已連線' : '已斷線';
+            }
+
+            startCountdown() {
+                this.stopCountdown(); // Clear any existing interval
+                this.countdownInterval = setInterval(() => {
+                    const timeLeft = Math.max(0, Math.floor((this.lockTime - Date.now()) / 1000));
+                    document.getElementById('lockCountdown').textContent = `${timeLeft}s`;
+                    if (timeLeft === 0) {
+                        this.stopCountdown();
+                    }
+                }, 1000);
+            }
+
+            stopCountdown() {
+                if (this.countdownInterval) {
+                    clearInterval(this.countdownInterval);
+                    this.countdownInterval = null;
+                    document.getElementById('lockCountdown').textContent = '--'; // Reset display
+                }
             }
         }
 
