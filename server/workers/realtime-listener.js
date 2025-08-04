@@ -112,14 +112,14 @@ class RealtimeListener {
 
         this.contract.on('LockRound', async (epoch) => {
             console.log(`🔒 Round locked: ${epoch}`);
-            // Assuming contract has a method to get lock time for the epoch
-            let lockTime = Date.now() + 30000; // Default to 30 seconds if not available
+            let lockTime = Date.now() + 30000; // Default to 30 seconds if contract call fails
             try {
-                // Replace with actual contract call if available
-                // const contractLockTime = await this.contract.getLockTime(epoch);
-                // lockTime = contractLockTime.toNumber() * 1000; // Convert to milliseconds
+                const roundData = await this.contract.rounds(epoch);
+                // Assuming lockTimestamp is the second element in the returned tuple/struct
+                // You might need to adjust the index based on your actual ABI structure
+                lockTime = roundData.lockTimestamp.toNumber() * 1000; // Convert to milliseconds
             } catch (error) {
-                console.error('Error getting lock time from contract:', error);
+                console.error('❌ Error getting lock time from contract:', error);
             }
             this.broadcastToClients({ type: 'round_lock', epoch: epoch.toString(), lockTime: lockTime });
         });
