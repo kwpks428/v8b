@@ -170,23 +170,26 @@ CREATE TABLE multi_round_claimer (
     id SERIAL PRIMARY KEY,
     
     -- 異常行為基本信息
-    wallet_address VARCHAR(42),     -- 異常錢包地址
-    claim_epoch BIGINT,             -- 發生異常領獎的局次
+    wallet_address VARCHAR(42),
+    claim_epoch BIGINT,
     
     -- 異常詳情
-    rounds_claimed INTEGER,         -- 一次性領取了多少個局次的獎金
-    bet_epochs BIGINT[],            -- 陣列：具體領取了哪些局次的獎金
-    total_amount NUMERIC(20,8),     -- 總領獎金額
+    rounds_claimed INTEGER,
+    bet_epochs BIGINT[],
+    total_amount NUMERIC(20,8),
     
     -- 檢測信息
-    detected_ts TIMESTAMP DEFAULT NOW(),   -- 檢測到異常的時間
-    note TEXT,                      -- 備註說明
+    detected_ts TIMESTAMP DEFAULT NOW(),
+    note TEXT,
     
     -- 狀態管理
     status VARCHAR(20) DEFAULT 'detected' CHECK (status IN ('detected', 'reviewed', 'resolved')),
-    reviewer VARCHAR(50),           -- 審核人員
-    review_ts TIMESTAMP,            -- 審核時間
-    review_note TEXT                -- 審核備註
+    reviewer VARCHAR(50),
+    review_ts TIMESTAMP,
+    review_note TEXT,
+
+    -- 唯一性約束，防止重複記錄
+    UNIQUE (claim_epoch, wallet_address)
 );
 
 -- multi_round_claimer表索引優化
