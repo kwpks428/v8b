@@ -326,7 +326,7 @@
             updateConnectionStatus(connected) {
                 const statusEl = document.getElementById('connectionStatus');
                 statusEl.className = `connection-status ${connected ? 'connected' : 'disconnected'}`;
-                statusEl.textContent = connected ? 'Connected' : 'Disconnected';
+                statusEl.textContent = connected ? '已連線' : '已斷線';
             }
         }
 
