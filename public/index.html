@@ -277,11 +277,11 @@
                 if (this.bets.length > 100) {
                     this.bets.pop();
                 }
-                this.updateStats();
+                this.updateStats(bet);
                 this.updateDisplay();
             }
 
-            updateStats() {
+            updateStats(bet) {
                 this.stats.totalAmount += parseFloat(bet.amount);
                 this.stats.totalCount++;
                 if (bet.direction === 'UP') {
