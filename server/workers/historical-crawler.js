@@ -30,8 +30,9 @@ class V6SingleRoundClaimDetector {
                     suspiciousWallets.push({
                         wallet_address: wallet,
                         epoch: epoch,
-                        claim_count: uniqueBetEpochs,
-                        total_amount: stats.totalAmount
+                        claim_count: uniqueBetEpochs, // 改為不同bet_epoch的數量
+                        total_amount: stats.totalAmount,
+                        betEpochs: Array.from(stats.betEpochs) // 傳遞實際的bet_epochs陣列
                     });
                     console.log(`🚨 Suspicious multi-claim detected: ${wallet} claimed ${uniqueBetEpochs} different bet epochs in epoch ${epoch}`);
                 }
